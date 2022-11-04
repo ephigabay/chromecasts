@@ -34,6 +34,20 @@ var toSubtitles = function (url, i) {
   }
 }
 
+castv2.MediaController.prototype.sessionRequest = function(data, callback) {
+  this.getStatus((_err, status) => {
+    data.mediaSessionId = this.currentSession ? this.currentSession.mediaSessionId : status.mediaSessionId;
+    callback = callback || noop;
+
+    this.request(data, function(err, response) {
+      if(err) return callback(err);
+      var status = response.status[0];
+      callback(null, status);
+    });
+  })
+  
+};
+
 module.exports = function () {
   var dns = mdns()
   var that = new events.EventEmitter()
@@ -71,7 +85,7 @@ module.exports = function () {
           if (err) return cb(err)
 
           var session = sess[0]
-          if (session && session.appId === castv2.DefaultMediaReceiver.APP_ID) {
+          if (session) {
             client.join(session, castv2.DefaultMediaReceiver, ready)
           } else {
             client.launch(castv2.DefaultMediaReceiver, ready)
